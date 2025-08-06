@@ -56,3 +56,17 @@ SPOTIFY_REDIRECT_URI=http://localhost:3000/callback
 2. ブラウザで `http://localhost:3000` にアクセス
 3. Spotifyアカウントでログイン
 4. 再生中の曲がリアルタイムで表示されます
+
+## テスト
+
+### Spotify APIテスト
+```bash
+cd backend
+./test.sh
+```
+
+### APIエンドポイントテスト
+バックエンドサーバーが起動している状態で：
+- `http://localhost:8000/test-spotify` - Spotify API接続テスト
+- `http://localhost:8000/current-track` - 現在再生中の曲を取得
+- `http://localhost:8000/auth` - 認証URLを取得

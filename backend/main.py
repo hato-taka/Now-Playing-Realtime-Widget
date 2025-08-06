@@ -167,6 +167,73 @@ async def get_current_track():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/test-spotify")
+async def test_spotify():
+    """Spotify APIのテスト用エンドポイント"""
+    try:
+        sp = create_spotify_client()
+        
+        # 基本的なAPI接続テスト
+        test_results = {
+            "api_connection": "OK",
+            "current_user": None,
+            "current_track": None,
+            "recent_tracks": None,
+            "errors": []
+        }
+        
+        # ユーザー情報を取得
+        try:
+            user = sp.current_user()
+            test_results["current_user"] = {
+                "id": user['id'],
+                "display_name": user['display_name'],
+                "email": user.get('email', 'N/A'),
+                "country": user.get('country', 'N/A')
+            }
+        except Exception as e:
+            test_results["errors"].append(f"ユーザー情報取得エラー: {str(e)}")
+        
+        # 現在再生中の曲を取得
+        try:
+            current_track = sp.current_user_playing_track()
+            if current_track:
+                test_results["current_track"] = {
+                    "is_playing": current_track.get('is_playing', False),
+                    "track_name": current_track['item']['name'] if current_track['item'] else None,
+                    "artist_name": current_track['item']['artists'][0]['name'] if current_track['item'] and current_track['item']['artists'] else None,
+                    "album_name": current_track['item']['album']['name'] if current_track['item'] else None,
+                    "progress_ms": current_track.get('progress_ms', 0),
+                    "duration_ms": current_track['item']['duration_ms'] if current_track['item'] else None
+                }
+            else:
+                test_results["current_track"] = "再生中の曲なし"
+        except Exception as e:
+            test_results["errors"].append(f"現在の曲取得エラー: {str(e)}")
+        
+        # 最近再生した曲を取得
+        try:
+            recent_tracks = sp.current_user_recently_played(limit=5)
+            test_results["recent_tracks"] = [
+                {
+                    "track_name": track['track']['name'],
+                    "artist_name": track['track']['artists'][0]['name'],
+                    "played_at": track['played_at']
+                }
+                for track in recent_tracks['items']
+            ]
+        except Exception as e:
+            test_results["errors"].append(f"最近の曲取得エラー: {str(e)}")
+        
+        return test_results
+        
+    except Exception as e:
+        return {
+            "api_connection": "ERROR",
+            "error": str(e),
+            "message": "Spotify API接続に失敗しました"
+        }
+
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     """WebSocketエンドポイント"""
